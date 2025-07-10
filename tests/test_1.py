@@ -1,37 +1,23 @@
 import pytest
-import pandas as pd
-from definition_1fbdbed3a6344d4fb3a918cdde73c23c import simulate_query_response
+from definition_97f37c595a63472caf880a2f554fbc1b import load_simulated_llm_performance_data
 
-@pytest.fixture
-def sample_document_data():
-    return pd.DataFrame({
-        'Month': ['May', 'June'],
-        'Coverage': ['You Only', 'Family'],
-        'HRA Contribution': [100, 200]
-    })
+def test_load_simulated_llm_performance_data_no_error():
+    """Test that the function runs without raising an exception."""
+    try:
+        load_simulated_llm_performance_data()
+    except Exception as e:
+        pytest.fail(f"Unexpected exception: {e}")
 
-@pytest.mark.parametrize("method, expected_answer, expected_accuracy", [
-    ("Traditional Textract (Simulated Low Accuracy)", "Sorry, I could not find relevant information...", 0.0),
-    ("AWS Textract Visual Q&A (Simulated Moderate Accuracy)", "Simulated answer for moderate accuracy", 0.4),
-    ("TalentMine (LLM-enhanced) (Simulated High Accuracy)", "Simulated answer for high accuracy", 1.0),
-])
-def test_simulate_query_response_different_methods(sample_document_data, method, expected_answer, expected_accuracy):
-    answer, accuracy = simulate_query_response(sample_document_data, "What is the HRA contribution?", method)
-    assert answer == expected_answer
-    assert accuracy == expected_accuracy
+def test_load_simulated_llm_performance_data_returns_none():
+    """Test that the function returns None as specified in the docstring."""
+    assert load_simulated_llm_performance_data() is None
 
-def test_simulate_query_response_invalid_method(sample_document_data):
-    answer, accuracy = simulate_query_response(sample_document_data, "What is the HRA contribution?", "Invalid Method")
-    assert answer == "Sorry, I could not find relevant information..."
-    assert accuracy == 0.0
+# Assuming that it should raise an error if the dataset is not found,
+# you could add the following tests, but they might not be relevant given the nature of the function
+# def test_load_simulated_llm_performance_data_invalid_path():
+#     with pytest.raises(FileNotFoundError):  # Or appropriate exception
+#         load_simulated_llm_performance_data("nonexistent_path.csv")
 
-def test_simulate_query_response_empty_document(sample_document_data):
-    empty_df = pd.DataFrame()
-    answer, accuracy = simulate_query_response(empty_df, "What is the HRA contribution?", "TalentMine (LLM-enhanced) (Simulated High Accuracy)")
-    assert answer == "Sorry, I could not find relevant information..."
-    assert accuracy == 0.0
-
-def test_simulate_query_response_no_query(sample_document_data):
-    answer, accuracy = simulate_query_response(sample_document_data, "", "TalentMine (LLM-enhanced) (Simulated High Accuracy)")
-    assert answer == "Simulated answer for high accuracy"
-    assert accuracy == 1.0
+# def test_load_simulated_llm_performance_data_empty_file():
+#     with pytest.raises(ValueError): # Or appropriate exception
+#         load_simulated_llm_performance_data("empty_file.csv")
