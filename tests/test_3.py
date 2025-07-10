@@ -1,39 +1,68 @@
 import pytest
 import pandas as pd
-from unittest.mock import patch
-import matplotlib.pyplot as plt
-from definition_65d47aa5414b470d9f62c545c3474d13 import generate_visualizations
+from unittest.mock import MagicMock
+from definition_03f324bf1eab48fca1b3d6eb02ade756 import render_hr_table
 
-@patch("matplotlib.pyplot.show")
-def test_generate_visualizations_empty_dataframe(mock_show):
+def test_render_hr_table_empty_dataframe():
     df = pd.DataFrame()
-    generate_visualizations(df)
-    assert mock_show.call_count == 0
+    try:
+        render_hr_table(df)
+    except Exception as e:
+        assert False, f"Rendering with an empty DataFrame raised an exception: {e}"
 
-@patch("matplotlib.pyplot.show")
-def test_generate_visualizations_one_method(mock_show):
-    data = {'Method': ['A'] * 3, 'Category': ['X', 'Y', 'Z'], 'Accuracy': [0.1, 0.2, 0.3]}
-    df = pd.DataFrame(data)
-    generate_visualizations(df)
-    assert mock_show.call_count >= 1
+def test_render_hr_table_typical_dataframe(monkeypatch):
+    df = pd.DataFrame({
+        'Month': ['January', 'February'],
+        'Coverage Tier': ['You Only', 'Family'],
+        'Company HRA Contribution': [100, 200],
+        'Network Deductible': [1000, 2000],
+        'Out-of-Pocket Max': [5000, 10000]
+    })
 
-@patch("matplotlib.pyplot.show")
-def test_generate_visualizations_multiple_methods(mock_show):
-    data = {'Method': ['A'] * 3 + ['B'] * 3, 'Category': ['X', 'Y', 'Z'] * 2, 'Accuracy': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]}
-    df = pd.DataFrame(data)
-    generate_visualizations(df)
-    assert mock_show.call_count >= 1
+    # Mock IPython.display.HTML to avoid actual HTML rendering during the test.
+    mock_html = MagicMock()
+    monkeypatch.setattr("IPython.display.HTML", mock_html)
 
-@patch("matplotlib.pyplot.show")
-def test_generate_visualizations_missing_data(mock_show):
-    data = {'Category': ['X', 'Y', 'Z'], 'Accuracy': [0.1, 0.2, 0.3]}
-    df = pd.DataFrame(data)
-    with pytest.raises(KeyError):
-         generate_visualizations(df)
+    render_hr_table(df)
+    assert mock_html.call_count == 1
 
-@patch("matplotlib.pyplot.show")
-def test_generate_visualizations_invalid_data(mock_show):
-    data = {'Method': ['A', 'B', 'C'], 'Category': ['X', 'Y', 'Z'], 'Accuracy': ['a', 'b', 'c']}
+def test_render_hr_table_with_nan_values(monkeypatch):
+    df = pd.DataFrame({
+        'Month': ['January', 'February'],
+        'Coverage Tier': ['You Only', 'Family'],
+        'Company HRA Contribution': [100, float('nan')],
+        'Network Deductible': [1000, 2000],
+        'Out-of-Pocket Max': [5000, 10000]
+    })
+
+    mock_html = MagicMock()
+    monkeypatch.setattr("IPython.display.HTML", mock_html)
+
+    render_hr_table(df)
+    assert mock_html.call_count == 1
+    
+def test_render_hr_table_with_inf_values(monkeypatch):
+    df = pd.DataFrame({
+        'Month': ['January', 'February'],
+        'Coverage Tier': ['You Only', 'Family'],
+        'Company HRA Contribution': [100, float('inf')],
+        'Network Deductible': [1000, 2000],
+        'Out-of-Pocket Max': [5000, 10000]
+    })
+
+    mock_html = MagicMock()
+    monkeypatch.setattr("IPython.display.HTML", mock_html)
+
+    render_hr_table(df)
+    assert mock_html.call_count == 1
+
+def test_render_hr_table_large_dataframe(monkeypatch):
+    data = {'col1': list(range(100)), 'col2': list('a'*100)}
     df = pd.DataFrame(data)
-    with pytest.raises(TypeError):
-        generate_visualizations(df)
+
+    mock_html = MagicMock()
+    monkeypatch.setattr("IPython.display.HTML", mock_html)
+
+    render_hr_table(df)
+
+    assert mock_html.call_count == 1
