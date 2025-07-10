@@ -1,49 +1,65 @@
 import pytest
-import pandas as pd
-from definition_75cf362b12984c94b64ebdb358b7fe23 import load_synthetic_hr_data
+from definition_3ae6d3e7f25944f3b63fec0c41203d89 import load_and_validate_data
 
-def test_load_synthetic_hr_data_valid_document():
-    # Test loading a valid document
+def test_load_and_validate_data_valid_file(tmp_path):
+    # Create a dummy CSV file for testing
+    d = tmp_path / "sub"
+    d.mkdir()
+    p = d / "test_data.csv"
+    p.write_text("Month,Coverage Tier,Company HRA Contribution,Network Deductible,Out-of-Pocket Max\nJan,You Only,100,1000,5000\nFeb,Family,200,2000,10000")
+
+    # Test that the function runs without error
     try:
-        df = load_synthetic_hr_data("valid_document")
-        assert isinstance(df, pd.DataFrame)
-    except NotImplementedError:
-        pass # Allow if the function is not implemented yet
+        load_and_validate_data(str(p))
+        assert True  # If no exception is raised, the test passes
+    except Exception as e:
+        assert False, f"Function raised an exception: {e}"
 
-def test_load_synthetic_hr_data_empty_document():
-    # Test with an empty document name
+def test_load_and_validate_data_invalid_column_names(tmp_path, capsys):
+    # Create a dummy CSV file with incorrect column names
+    d = tmp_path / "sub"
+    d.mkdir()
+    p = d / "test_data.csv"
+    p.write_text("Invalid,Columns\n1,2")
+
+    #Test that the function handles it without crashing.
     try:
-        df = load_synthetic_hr_data("")
-        assert isinstance(df, pd.DataFrame) # Assuming some default df is returned
-    except NotImplementedError:
-        pass # Allow if the function is not implemented yet
+        load_and_validate_data(str(p))
+        assert True #If no exception is raised, the test passes
+    except Exception as e:
+        assert False, f"Function raised an exception: {e}"
 
+def test_load_and_validate_data_missing_values(tmp_path, capsys):
+    # Create a dummy CSV file with missing values in critical fields
+    d = tmp_path / "sub"
+    d.mkdir()
+    p = d / "test_data.csv"
+    p.write_text("Month,Coverage Tier,Company HRA Contribution,Network Deductible,Out-of-Pocket Max\nJan,,100,1000,5000\nFeb,Family,200,2000,")
 
-def test_load_synthetic_hr_data_invalid_document():
-    # Test loading a non-existent document
+    # Test that the function handles it without crashing
     try:
-        df = load_synthetic_hr_data("invalid_document")
-        # It's difficult to predict the exact behavior (e.g., exception or default DataFrame)
-        # So, just check if it runs without crashing in this basic test case
-        assert True # Execution reached here, no crash. Further checks depend on actual impl.
-    except NotImplementedError:
-        pass # Allow if the function is not implemented yet
-
-def test_load_synthetic_hr_data_none_document():
-    # Test with None as the document name.
-    try:
-        df = load_synthetic_hr_data(None)
-        # Again, difficult to predict. Check that it runs without crashing
+        load_and_validate_data(str(p))
         assert True
-    except NotImplementedError:
-        pass
+    except Exception as e:
+        assert False, f"Function raised an exception: {e}"
 
-def test_load_synthetic_hr_data_with_number_as_document():
-    # Test loading a non-string docname
+def test_load_and_validate_data_no_filepath(capsys):
+    # Test that the function runs without a filepath without crashing.
     try:
-        df = load_synthetic_hr_data(123)
-        # Check if it runs without crashing
+        load_and_validate_data(None)
         assert True
-    except NotImplementedError:
-        pass
+    except Exception as e:
+        assert False, f"Function raised an exception: {e}"
 
+def test_load_and_validate_data_invalid_data_types(tmp_path, capsys):
+    # Create a dummy CSV file with invalid datatypes
+    d = tmp_path / "sub"
+    d.mkdir()
+    p = d / "test_data.csv"
+    p.write_text("Month,Coverage Tier,Company HRA Contribution,Network Deductible,Out-of-Pocket Max\nJan,You Only,abc,1000,5000")
+
+    try:
+        load_and_validate_data(str(p))
+        assert True
+    except Exception as e:
+        assert False, f"Function raised an exception: {e}"
